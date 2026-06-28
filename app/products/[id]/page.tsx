@@ -10,7 +10,7 @@ import { Product3DViewer } from '@/components/product-3d-viewer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Product } from '@/lib/types/product'
-import { getProductById, login } from '@/services/products.service'
+import { getProductById } from '@/services/products.service'
 import Image from "next/image"
 
 // export default function ProductPage({ params }: ProductPageProps) {
