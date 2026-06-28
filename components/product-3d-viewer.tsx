@@ -90,7 +90,7 @@ function ProductShape({ category }: { category: string }) {
 export function Product3DViewer({ category, className = '' }: Product3DViewerProps) {
   return (
     <div className={`w-full h-full min-h-[200px] ${className}`}>
-      <Canvas camera={{ position: [3, 2, 3], fov: 45 }}>
+      {/* <Canvas camera={{ position: [3, 2, 3], fov: 45 }}>
         <Suspense fallback={null}>
           <ambientLight intensity={0.5} />
           <directionalLight position={[5, 5, 5]} intensity={1} />
@@ -104,7 +104,7 @@ export function Product3DViewer({ category, className = '' }: Product3DViewerPro
           />
           <Environment preset="studio" />
         </Suspense>
-      </Canvas>
+      </Canvas> */}
     </div>
   )
 }

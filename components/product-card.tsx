@@ -2,24 +2,31 @@
 
 import Link from 'next/link'
 import { Heart, ShoppingCart } from 'lucide-react'
-import { Product, useStore } from '@/lib/store'
-import { Product3DViewer } from './product-3d-viewer'
 import { cn } from '@/lib/utils'
+import { Product } from '@/lib/types/product'
+import Image from "next/image"
 
 interface ProductCardProps {
   product: Product
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { toggleFavorite, isFavorite, addToCart, isInCart } = useStore()
-  const favorite = isFavorite(product.id)
+  // IMPLEMENT
+  // const { toggleFavorite, isFavorite, addToCart, isInCart } = useStore()
+  // const favorite = isFavorite(product.id)
 
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all duration-300">
       {/* 3D View */}
-      <Link href={`/product/${product.id}`}>
+      <Link href={`/products/${product.id}`}>
         <div className="relative h-56 bg-primary cursor-pointer">
-          <Product3DViewer category={product.category} />
+          {/* <Product3DViewer category={product.category.name} /> */}
+          <Image
+            src={`${product.images[0]}`}
+            alt="Abajur Image"
+            fill={true}
+            loading='eager'
+          ></Image>
           <div className="absolute inset-0 bg-gradient-to-t from-card/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </Link>
@@ -30,34 +37,55 @@ export function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={(e) => {
             e.preventDefault()
-            toggleFavorite(product.id)
+            // toggleFavorite(product.id)
           }}
           className={cn(
             'p-2 rounded-full transition-all duration-200',
-            favorite
+            // IMPLEMENT
+            // favorite
+            true
               ? 'bg-accent text-accent-foreground'
               : 'bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-accent hover:bg-card'
           )}
-          aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
+          aria-label={
+            // IMPLEMENT
+            // favorite ? 'Remove from favorites' : 'Add to favorites'
+            true ? 'Remove from favorites' : 'Add to favorites'
+          }
         >
-          <Heart className={cn('w-5 h-5', favorite && 'fill-current')} />
+          <Heart className={
+              // IMPLEMENT
+              // cn('w-5 h-5', favorite && 'fill-current')
+              cn('w-5 h-5', true && 'fill-current')
+            } />
         </button>
 
         {/* Add to Cart Button */}
         <button
           onClick={(e) => {
             e.preventDefault()
-            addToCart(product)
+            // IMPLEMENT
+            // addToCart(product)
           }}
           className={cn(
             'p-2 rounded-full transition-all duration-200',
-            isInCart(product.id)
+            // IMPLEMENT
+            // isInCart(product.id)
+            true
               ? 'bg-primary text-primary-foreground'
               : 'bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-primary hover:bg-card'
           )}
-          aria-label={isInCart(product.id) ? 'Already in cart' : 'Add to cart'}
+          aria-label={
+            // IMPLEMENT
+            // isInCart(product.id) ? 'Already in cart' : 'Add to cart'
+            true ? 'Already in cart' : 'Add to cart'
+          }
         >
-          <ShoppingCart className={cn('w-5 h-5', isInCart(product.id) && 'fill-current')} />
+          <ShoppingCart className={
+            // IMPLEMENT
+            // cn('w-5 h-5', isInCart(product.id) && 'fill-current')
+            cn('w-5 h-5', true && 'fill-current')
+          } />
         </button>
       </div>
 
@@ -65,7 +93,7 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="p-4">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs font-medium px-2 py-1 bg-primary rounded-full text-primary-foreground">
-            {product.category}
+            {product.category.name}
           </span>
         </div>
         <Link href={`/product/${product.id}`}>

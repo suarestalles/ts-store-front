@@ -159,15 +159,15 @@ export default function AdminManagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-primary backdrop-blur">
+      <header className="sticky top-0 z-40 w-full border-b border-border bg-card   backdrop-blur">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
                 href="/admin"
-                className="inline-flex items-center gap-2 text-primary-foreground bg-primary hover:text-foreground transition-colors p-2 rounded-md border"
+                className="inline-flex items-center gap-2 text-primary-foreground bg-card hover:text-foreground transition-colors p-2 rounded-md border"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Dashboard

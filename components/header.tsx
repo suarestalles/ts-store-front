@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Search, ShoppingCart, Heart, User, Menu, X, Package, Settings } from 'lucide-react'
-import { useStore } from '@/lib/store'
 import { ProfilePopup } from './profile-popup'
 import { cn } from '@/lib/utils'
 
@@ -13,11 +12,11 @@ interface HeaderProps {
 }
 
 export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
-  const { cart, favorites } = useStore()
+  // const { cart, favorites } = useStore()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  // const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <>
@@ -53,11 +52,11 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
                 aria-label="Favorites"
               >
                 <Heart className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
-                {favorites.length > 0 && (
+                {/* {favorites.length > 0 && ( */}
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs font-bold rounded-full flex items-center justify-center">
-                    {favorites.length}
+                    {0}
                   </span>
-                )}
+                {/* )} */}
               </Link>
 
               {/* Cart */}
@@ -67,11 +66,11 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
                 aria-label="Shopping cart"
               >
                 <ShoppingCart className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
-                {cartItemsCount > 0 && (
+                {/* {cartItemsCount > 0 && ( */}
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
-                    {cartItemsCount}
+                    {0}
                   </span>
-                )}
+                {/* )} */}
               </Link>
 
               {/* Profile */}

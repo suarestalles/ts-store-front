@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { X, User, Mail, Phone, MapPin, Save } from 'lucide-react'
-import { useStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -12,7 +11,8 @@ interface ProfilePopupProps {
 }
 
 export function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
-  const { user, setUser } = useStore()
+  // IMPLEMENT
+  // const { user, setUser } = useStore()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,15 +20,15 @@ export function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
     address: '',
   })
 
-  useEffect(() => {
-    if (user) {
-      setFormData(user)
-    }
-  }, [user])
+  // useEffect(() => {
+  //   if (user) {
+  //     setFormData(user)
+  //   }
+  // }, [user])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setUser(formData)
+    // setUser(formData)
     onClose()
   }
 
@@ -54,8 +54,8 @@ export function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
               <User className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-card-foreground">Profile</h2>
-              <p className="text-sm text-muted-foreground">Manage your account details</p>
+              <h2 className="text-lg font-semibold text-foreground">Profile</h2>
+              <p className="text-sm text-foreground">Manage your account details</p>
             </div>
           </div>
           <button
@@ -70,8 +70,8 @@ export function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground flex items-center gap-2">
-              <User className="w-4 h-4 text-muted-foreground" />
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <User className="w-4 h-4 text-foreground" />
               Full Name
             </label>
             <input
@@ -85,8 +85,8 @@ export function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground flex items-center gap-2">
-              <Mail className="w-4 h-4 text-muted-foreground" />
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Mail className="w-4 h-4 text-foreground" />
               Email
             </label>
             <input
@@ -100,8 +100,8 @@ export function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground flex items-center gap-2">
-              <Phone className="w-4 h-4 text-muted-foreground" />
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Phone className="w-4 h-4 text-foreground" />
               Phone
             </label>
             <input
@@ -115,8 +115,8 @@ export function ProfilePopup({ isOpen, onClose }: ProfilePopupProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-card-foreground flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
+            <label className="text-sm font-medium text-foreground flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-foreground" />
               Address
             </label>
             <textarea

@@ -1,29 +1,44 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useStore } from '@/lib/store'
+import { useState, useMemo, useEffect } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
 import { Filter } from 'lucide-react'
+import { Product } from '@/lib/types/product'
+import { ProductImage } from '@/lib/types/productImage'
+import { getProducts } from '@/services/products.service'
 
 const categories = ['All', 'Furniture', 'Lighting', 'Decor']
 
 export default function HomePage() {
-  const { products } = useStore()
+  // const { products } = useStore()
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesCategory =
-        selectedCategory === 'All' || product.category === selectedCategory
-      return matchesSearch && matchesCategory
-    })
-  }, [products, searchQuery, selectedCategory])
+  // const filteredProducts = useMemo(() => {
+  //   return products.filter((product) => {
+  //     const matchesSearch =
+  //       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //       product.description.toLowerCase().includes(searchQuery.toLowerCase())
+  //     const matchesCategory =
+  //       selectedCategory === 'All' || product.category.name === selectedCategory
+  //     return matchesSearch && matchesCategory
+  //   })
+  // }, [products, searchQuery, selectedCategory])
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const response = await getProducts();
+        setProducts(response)
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    loadProducts();
+  }, []); 
 
   return (
     <div className="min-h-screen bg-card">
@@ -68,9 +83,9 @@ export default function HomePage() {
 
         {/* Products Grid */}
         <section>
-          {filteredProducts.length > 0 ? (
+          {products.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+              {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
