@@ -1,10 +1,8 @@
+import { CreateProductDTO, Product, UpdateProductDTO } from "@/features/product/types";
 import { api } from "@/lib/api";
-import { CreateProductDTO, UpdateProductDTO } from "@/lib/dtos/product.dto";
-import type { Product } from "@/lib/types/product";
 
-export async function getProducts() {
-    const response = await api("/products") as { data: object};
-    return response['data'] as Product[]
+export function getProducts() {
+    return api<Product[]>("/products");
 }
 
 export function getProductById(id: string) {

@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Search, ShoppingCart, Heart, User, Menu, X, Package, Settings } from 'lucide-react'
-import { ProfilePopup } from './profile-popup'
 import { cn } from '@/lib/utils'
+import { ProfilePopup } from '@/features/auth/components/ProfilePopup'
 
 interface HeaderProps {
   searchQuery?: string

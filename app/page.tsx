@@ -5,9 +5,8 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
 import { Filter } from 'lucide-react'
-import { Product } from '@/lib/types/product'
-import { ProductImage } from '@/lib/types/productImage'
 import { getProducts } from '@/services/products.service'
+import { Product } from '@/features/product/types'
 
 const categories = ['All', 'Furniture', 'Lighting', 'Decor']
 
@@ -32,7 +31,8 @@ export default function HomePage() {
     async function loadProducts() {
       try {
         const response = await getProducts();
-        setProducts(response)
+        // console.log(JSON.stringify(response.data['data']))
+        setProducts(response.data['data'])
       } catch (error) {
         console.error(error);
       }
