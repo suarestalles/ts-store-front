@@ -26,3 +26,13 @@ export function updateProduct(id: string, data: UpdateProductDTO) {
 export function deleteProduct(id: string) {
     return api<void>(`/products/${id}`, { method: "DELETE" })
 }
+
+export function getProductByCategory(categoryId: string) {
+    const query = {
+        categoryId: categoryId,
+        page: 1,
+        limit: 20
+    }
+    console.log()
+    return api<Product[]>(`/products/category/${categoryId}`)
+}

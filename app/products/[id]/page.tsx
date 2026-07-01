@@ -9,7 +9,7 @@ import { Footer } from '@/components/footer'
 import { Product3DViewer } from '@/components/product-3d-viewer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { getProductById } from '@/services/products.service'
+import { getProductById } from '@/features/product/products.service'
 import Image from "next/image"
 import { Product } from '@/features/product/types'
 

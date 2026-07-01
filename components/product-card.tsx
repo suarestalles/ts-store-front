@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import { Heart, ShoppingCart } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Product } from '@/lib/types/product'
 import Image from "next/image"
+import { Product } from '@/features/product/types'
 
 interface ProductCardProps {
   product: Product
@@ -22,7 +22,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="relative h-56 bg-primary cursor-pointer">
           {/* <Product3DViewer category={product.category.name} /> */}
           <Image
-            src={`${product.images[0]}`}
+            src={`${product.images[0]} ?? `}
             alt="Abajur Image"
             fill={true}
             loading='eager'

@@ -5,40 +5,44 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
 import { Filter } from 'lucide-react'
-import { getProducts } from '@/services/products.service'
+import { getProductByCategory, getProducts } from '@/features/product/products.service'
 import { Product } from '@/features/product/types'
-
-const categories = ['All', 'Furniture', 'Lighting', 'Decor']
+import { Category } from '@/features/category/types'
+import { getCategories } from '@/features/category/category.service'
 
 export default function HomePage() {
-  // const { products } = useStore()
   const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  // const filteredProducts = useMemo(() => {
-  //   return products.filter((product) => {
-  //     const matchesSearch =
-  //       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //       product.description.toLowerCase().includes(searchQuery.toLowerCase())
-  //     const matchesCategory =
-  //       selectedCategory === 'All' || product.category.name === selectedCategory
-  //     return matchesSearch && matchesCategory
-  //   })
-  // }, [products, searchQuery, selectedCategory])
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const response = await getCategories()
+        setCategories(response.data.data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    loadCategories();
+  }, [])
 
   useEffect(() => {
     async function loadProducts() {
       try {
-        const response = await getProducts();
-        // console.log(JSON.stringify(response.data['data']))
-        setProducts(response.data['data'])
+        const response = selectedCategory
+          ? await getProductByCategory(selectedCategory.id)
+          : await getProducts();
+        setProducts(response.data.data)
+        
       } catch (error) {
         console.error(error);
       }
     }
-    loadProducts();
-  }, []); 
+    loadProducts()
+    
+  }, [selectedCategory]);
 
   return (
     <div className="min-h-screen bg-card">
@@ -64,17 +68,27 @@ export default function HomePage() {
               <span className="font-medium">Filter:</span>
             </div>
             <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className={`px-4 py-2 rounded-full ${
+                  selectedCategory === null
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-background'
+                }`}
+              >
+                All
+              </button>
               {categories.map((category) => (
                 <button
-                  key={category}
+                  key={category.name}
                   onClick={() => setSelectedCategory(category)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedCategory === category
+                    selectedCategory?.name === category.name
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-background text-secondary-foreground hover:bg-secondary/80'
                   }`}
                 >
-                  {category}
+                  {category.name}
                 </button>
               ))}
             </div>
