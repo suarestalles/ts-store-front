@@ -28,11 +28,5 @@ export function deleteProduct(id: string) {
 }
 
 export function getProductByCategory(categoryId: string) {
-    const query = {
-        categoryId: categoryId,
-        page: 1,
-        limit: 20
-    }
-    console.log()
     return api<Product[]>(`/products/category/${categoryId}`)
 }

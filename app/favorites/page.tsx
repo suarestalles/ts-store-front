@@ -2,19 +2,16 @@
 
 import Link from 'next/link'
 import { ArrowLeft, Heart, ShoppingCart } from 'lucide-react'
-import { useStore } from '@/lib/store'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
 import { Button } from '@/components/ui/button'
+import { useFavorite } from '@/features/favorite/useFavorite'
 
 export default function FavoritesPage() {
-  const { products, favorites } = useStore()
 
-  const favoriteProducts = products.filter((product) =>
-    favorites.includes(product.id)
-  )
-
+  const { favorites } = useFavorite()
+  
   return (
     <div className="min-h-screen bg-card">
       <Header />
@@ -37,9 +34,9 @@ export default function FavoritesPage() {
           </span>
         </div>
 
-        {favoriteProducts.length > 0 ? (
+        {favorites.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {favoriteProducts.map((product) => (
+            {favorites.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

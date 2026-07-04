@@ -1,5 +1,5 @@
 import { api } from "@/lib/api"
-import { LoginData } from "../types"
+import { LoginData } from "./types"
 
 export async function login(data: LoginData) {
     return api('/login', {

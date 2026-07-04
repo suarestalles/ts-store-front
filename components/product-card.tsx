@@ -5,15 +5,18 @@ import { Heart, ShoppingCart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Image from "next/image"
 import { Product } from '@/features/product/types'
+import { useFavorite } from '@/features/favorite/useFavorite'
+import { useAuth } from '@/features/auth/useAuth'
 
 interface ProductCardProps {
   product: Product
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  // IMPLEMENT
-  // const { toggleFavorite, isFavorite, addToCart, isInCart } = useStore()
-  // const favorite = isFavorite(product.id)
+
+  const { isFavorite, toggleFavorite } = useFavorite()
+  const favorite = isFavorite(product.id)
+  const { isAuthenticated, openLogin } = useAuth()
 
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all duration-300">
@@ -22,7 +25,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="relative h-56 bg-primary cursor-pointer">
           {/* <Product3DViewer category={product.category.name} /> */}
           <Image
-            src={`${product.images[0]} ?? `}
+            src={"https://radiantbr.com/cdn/shop/files/AbajurGrandeModernoMinimalistaRadiant_9.webp?v=1748635582&width=1024"}
             alt="Abajur Image"
             fill={true}
             loading='eager'
@@ -35,22 +38,26 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
         {/* Favorite Button */}
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault()
-            // toggleFavorite(product.id)
+            if (!isAuthenticated) {
+              openLogin()
+              return
+            }
+            await toggleFavorite(product.id)
           }}
           className={cn(
             'p-2 rounded-full transition-all duration-200',
             // IMPLEMENT
-            // favorite
-            true
+            favorite
+            // true
               ? 'bg-accent text-accent-foreground'
               : 'bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-accent hover:bg-card'
           )}
           aria-label={
             // IMPLEMENT
-            // favorite ? 'Remove from favorites' : 'Add to favorites'
-            true ? 'Remove from favorites' : 'Add to favorites'
+            favorite ? 'Remove from favorites' : 'Add to favorites'
+            // true ? 'Remove from favorites' : 'Add to favorites'
           }
         >
           <Heart className={
@@ -106,7 +113,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </p>
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-secondary">
-            ${product.price.toFixed(2)}
+            ${Number(product.price).toFixed(2)}
           </span>
           <Link
             href={`/product/${product.id}`}

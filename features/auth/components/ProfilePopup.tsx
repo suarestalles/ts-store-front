@@ -1,21 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "../useAuth";
 import { LoginData } from "../types";
 import { cn } from "@/lib/utils";
 import { User, X } from "lucide-react";
 import { UserProfileForm } from "./UserProfileForm";
 import { LoginForm } from "./LoginForm";
 
-interface ProfilePopupProps {
-    isOpen: boolean
-    onClose: () => void,
-}
-
-export function ProfilePopup({
-    isOpen,
-    onClose
-}: ProfilePopupProps) {
+export function ProfilePopup() {
     const {
+        isLoginOpen,
+        closeLogin,
         user,
         loading,
         login,
@@ -39,8 +33,6 @@ export function ProfilePopup({
 
         const success = await login(loginData)
 
-        console.log(JSON.stringify(success))
-
         if(!success) {
             alert('Invalid Credentials')
         }
@@ -52,7 +44,7 @@ export function ProfilePopup({
         const success = await update(formData)
 
         if(success) {
-            onClose()
+            closeLogin()
         }
     }
 
@@ -67,13 +59,13 @@ export function ProfilePopup({
         })
     }, [user])
 
-    if(!isOpen) return
+    if(!isLoginOpen) return
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div
                 className="absolute inset-0 bg-foreground/50 backdrop-blur-sm"
-                onClick={onClose}
+                onClick={closeLogin}
             />
 
             <div
@@ -112,7 +104,7 @@ export function ProfilePopup({
 
                 </div>
 
-                <button onClick={onClose}>
+                <button onClick={closeLogin}>
                     <X className="h-5 w-5" />
                 </button>
 

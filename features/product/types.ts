@@ -1,4 +1,5 @@
 import { Category } from "../category/types"
+import { Favorite } from "../favorite/types"
 import { ProductImage } from "../productImage/types"
 
 export interface Product {
@@ -10,6 +11,7 @@ export interface Product {
     updatedAt: string
     category: Category
     images: ProductImage[]
+    favorites: Favorite[]
 }
 
 export interface CreateProductDTO {

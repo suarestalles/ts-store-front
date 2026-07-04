@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { Search, ShoppingCart, Heart, User, Menu, X, Package, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProfilePopup } from '@/features/auth/components/ProfilePopup'
+import { useFavorite } from '@/features/favorite/useFavorite'
+import { useAuth } from '@/features/auth/useAuth'
 
 interface HeaderProps {
   searchQuery?: string
@@ -12,11 +14,10 @@ interface HeaderProps {
 }
 
 export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
-  // const { cart, favorites } = useStore()
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const { isAuthenticated, openLogin } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { favoritesCount } = useFavorite()
 
-  // const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <>
@@ -48,15 +49,19 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
               {/* Favorites */}
               <Link
                 href="/favorites"
+                onClick={async (e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault()
+                    openLogin()
+                  }
+                }}
                 className="relative p-2 rounded-lg hover:bg-primary transition-colors"
                 aria-label="Favorites"
               >
                 <Heart className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
-                {/* {favorites.length > 0 && ( */}
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs font-bold rounded-full flex items-center justify-center">
-                    {0}
+                    {favoritesCount}
                   </span>
-                {/* )} */}
               </Link>
 
               {/* Cart */}
@@ -75,7 +80,7 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
 
               {/* Profile */}
               <button
-                onClick={() => setIsProfileOpen(true)}
+                onClick={() => openLogin()}
                 className="p-2 rounded-lg hover:bg-primary transition-colors"
                 aria-label="Profile"
               >
@@ -125,7 +130,7 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
         </div>
       </header>
 
-      <ProfilePopup isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
+      <ProfilePopup/>
     </>
   )
 }
