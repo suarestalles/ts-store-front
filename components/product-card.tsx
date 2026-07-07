@@ -7,6 +7,8 @@ import Image from "next/image"
 import { Product } from '@/features/product/types'
 import { useFavorite } from '@/features/favorite/useFavorite'
 import { useAuth } from '@/features/auth/useAuth'
+import { useCartItem } from '@/features/cartItem/useCartItem'
+import { formatCurrency } from '@/lib/currency'
 
 interface ProductCardProps {
   product: Product
@@ -16,6 +18,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
   const { isFavorite, toggleFavorite } = useFavorite()
   const favorite = isFavorite(product.id)
+  const { isCartItem, addCartItem } = useCartItem()
+  const inCart = isCartItem(product.id)
   const { isAuthenticated, openLogin } = useAuth()
 
   return (
@@ -48,50 +52,41 @@ export function ProductCard({ product }: ProductCardProps) {
           }}
           className={cn(
             'p-2 rounded-full transition-all duration-200',
-            // IMPLEMENT
             favorite
-            // true
               ? 'bg-accent text-accent-foreground'
               : 'bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-accent hover:bg-card'
           )}
           aria-label={
-            // IMPLEMENT
             favorite ? 'Remove from favorites' : 'Add to favorites'
-            // true ? 'Remove from favorites' : 'Add to favorites'
           }
         >
           <Heart className={
-              // IMPLEMENT
-              // cn('w-5 h-5', favorite && 'fill-current')
-              cn('w-5 h-5', true && 'fill-current')
-            } />
+            cn('w-5 h-5', favorite && 'fill-current')
+          } />
         </button>
 
         {/* Add to Cart Button */}
         <button
-          onClick={(e) => {
+          onClick={async (e) => {
             e.preventDefault()
-            // IMPLEMENT
-            // addToCart(product)
+            if (!isAuthenticated) {
+              openLogin()
+              return
+            }
+            await addCartItem(product.id)
           }}
           className={cn(
             'p-2 rounded-full transition-all duration-200',
-            // IMPLEMENT
-            // isInCart(product.id)
-            true
+            inCart
               ? 'bg-primary text-primary-foreground'
               : 'bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-primary hover:bg-card'
           )}
           aria-label={
-            // IMPLEMENT
-            // isInCart(product.id) ? 'Already in cart' : 'Add to cart'
-            true ? 'Already in cart' : 'Add to cart'
+            inCart ? 'Already in cart' : 'Add to cart'
           }
         >
           <ShoppingCart className={
-            // IMPLEMENT
-            // cn('w-5 h-5', isInCart(product.id) && 'fill-current')
-            cn('w-5 h-5', true && 'fill-current')
+            cn('w-5 h-5', inCart && 'fill-current')
           } />
         </button>
       </div>
@@ -103,7 +98,7 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.category.name}
           </span>
         </div>
-        <Link href={`/product/${product.id}`}>
+        <Link href={`/products/${product.id}`}>
           <h3 className="font-semibold text-card-foreground group-hover:text-secondary transition-colors mb-1">
             {product.name}
           </h3>
@@ -113,10 +108,10 @@ export function ProductCard({ product }: ProductCardProps) {
         </p>
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-secondary">
-            ${Number(product.price).toFixed(2)}
+            {formatCurrency(product.price)}
           </span>
           <Link
-            href={`/product/${product.id}`}
+            href={`/products/${product.id}`}
             className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
           >
             View Details →

@@ -2,24 +2,27 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, MessageCircle } from 'lucide-react'
-import { useStore } from '@/lib/store'
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, MessageCircle, Phone } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
+import { useCartItem } from '@/features/cartItem/useCartItem'
+import { useAuth } from '@/features/auth/useAuth'
+import { FaWhatsapp } from "react-icons/fa"
+import { formatCurrency } from '@/lib/currency'
 
 export default function CartPage() {
-  const { cart, updateQuantity, removeFromCart, getCartTotal, clearCart, user } = useStore()
+  const { cartItems, updateQuantity, clearCart, removeCartItem } = useCartItem();
+  const { user, isAuthenticated, openLogin } = useAuth();
+
   const [customerInfo, setCustomerInfo] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
     address: user?.address || '',
   })
 
-  const total = getCartTotal()
-
   const generateWhatsAppMessage = () => {
-    if (cart.length === 0) return ''
+    if (cartItems.length === 0) return ''
 
     let message = `*New Order from 3D Store*\n\n`
     message += `*Customer Information:*\n`
@@ -29,14 +32,14 @@ export default function CartPage() {
     message += `*Order Details:*\n`
     message += `------------------------\n`
 
-    cart.forEach((item, index) => {
+    cartItems.forEach((item, index) => {
       message += `${index + 1}. ${item.product.name}\n`
-      message += `   Qty: ${item.quantity} x $${item.product.price.toFixed(2)}\n`
-      message += `   Subtotal: $${(item.product.price * item.quantity).toFixed(2)}\n\n`
+      message += `   Qty: ${item.quantity} x ${formatCurrency(item.product.price)}\n`
+      message += `   Subtotal: ${formatCurrency(item.product.price * item.quantity)}\n\n`
     })
 
     message += `------------------------\n`
-    message += `*TOTAL: $${total.toFixed(2)}*\n`
+    message += `*TOTAL: ${calculateTotal()}*\n`
 
     return encodeURIComponent(message)
   }
@@ -48,12 +51,18 @@ export default function CartPage() {
     }
 
     const message = generateWhatsAppMessage()
-    // Replace with your WhatsApp number
-    const whatsappNumber = '5511999999999'
+    const whatsappNumber = '5564996144837'
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank')
   }
 
-  if (cart.length === 0) {
+  function calculateTotal() {
+    const subTotal = cartItems.reduce((total, item) => {
+      return total + ((item.product.price) * (item.quantity))
+    }, 0)
+    return formatCurrency(subTotal)
+  }
+
+  if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-card">
         <Header />
@@ -64,9 +73,20 @@ export default function CartPage() {
             <p className="text-muted-foreground mb-8">
               Looks like you haven&apos;t added any items yet.
             </p>
-            <Link href="/">
-              <Button>Continue Shopping</Button>
-            </Link>
+              <div className="flex justify-center gap-4">
+                <Link href="/">
+                  <Button>Continue Shopping</Button>
+                </Link>
+                {!isAuthenticated ? <Button
+                  onClick={async (e) => {
+                    if (!isAuthenticated) {
+                      e.preventDefault()
+                      openLogin()
+                    }
+                  }}>
+                  Login
+                </Button> : null}
+              </div>
           </div>
         </main>
         <Footer />
@@ -93,7 +113,7 @@ export default function CartPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.map((item) => (
+            {cartItems.map((item) => (
               <div
                 key={item.product.id}
                 className="flex gap-4 p-4 bg-card rounded-xl border border-border"
@@ -105,21 +125,25 @@ export default function CartPage() {
 
                 {/* Product Info */}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-card-foreground truncate">
+                  <h3 className="font-semibold text-foreground truncate">
                     {item.product.name}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-2">
-                    {item.product.category}
+                    {item.product.category.name}
                   </p>
-                  <p className="font-semibold">
-                    ${item.product.price.toFixed(2)}
+                  <p className="font-semibold text-primary">
+                    {formatCurrency(item.product.price)}
                   </p>
                 </div>
 
                 {/* Quantity Controls */}
                 <div className="flex flex-col items-end justify-between">
                   <button
-                    onClick={() => removeFromCart(item.product.id)}
+                    onClick={async (e) => {
+                      e.preventDefault()
+                      await removeCartItem(item.id)
+                    }}
+                    // onClick={() => {}}
                     className="p-2 text-muted-foreground hover:text-destructive transition-colors"
                     aria-label="Remove item"
                   >
@@ -128,15 +152,22 @@ export default function CartPage() {
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                      onClick={async (e) => {
+                        if ((item.quantity - 1) === 0) return
+                        e.preventDefault()
+                        await updateQuantity(item.id, item.quantity - 1)}
+                      }
                       className="w-8 h-8 flex items-center justify-center bg-background rounded-lg hover:bg-secondary/80 transition-colors"
                       aria-label="Decrease quantity"
-                    >
+                      >
                       <Minus className="w-4 h-4" />
                     </button>
                     <span className="w-8 text-center font-medium">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                      onClick={async (e) => {
+                        e.preventDefault()
+                        await updateQuantity(item.id, item.quantity + 1)}
+                      }
                       className="w-8 h-8 flex items-center justify-center bg-background rounded-lg hover:bg-secondary/80 transition-colors"
                       aria-label="Increase quantity"
                     >
@@ -144,8 +175,8 @@ export default function CartPage() {
                     </button>
                   </div>
 
-                  <p className="font-bold text-lg text-primary">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                  <p className="font-bold text-lg text-foreground">
+                    {formatCurrency(item.product.price * item.quantity)}
                   </p>
                 </div>
               </div>
@@ -154,7 +185,11 @@ export default function CartPage() {
             <Button
               variant="outline"
               className="w-full bg-primary text-primary-foreground"
-              onClick={clearCart}
+              // onClick={clearCart}
+              onClick={async (e) => {
+                e.preventDefault()
+                await clearCart()
+              }}
             >
               Clear Cart
             </Button>
@@ -163,19 +198,19 @@ export default function CartPage() {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 bg-card rounded-xl border border-border p-6">
-              <h2 className="text-xl font-bold text-card-foreground mb-6">
+              <h2 className="text-xl font-bold text-foreground mb-6">
                 Order Summary
               </h2>
 
               {/* Items Summary */}
               <div className="space-y-3 mb-6">
-                {cart.map((item) => (
+                {cartItems.map((item) => (
                   <div key={item.product.id} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
                       {item.product.name} x {item.quantity}
                     </span>
-                    <span className="text-card-foreground font-medium">
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                    <span className="text-secondary font-medium">
+                      {formatCurrency(item.product.price * item.quantity)}
                     </span>
                   </div>
                 ))}
@@ -183,14 +218,14 @@ export default function CartPage() {
 
               <div className="border-t border-border pt-4 mb-6">
                 <div className="flex justify-between text-lg font-bold">
-                  <span className="text-card-foreground">Total</span>
-                  <span className="text-secondary text-bold">${total.toFixed(2)}</span>
+                  <span className="text-primary">Total</span>
+                  <span className="text-primary text-bold">{calculateTotal()}</span>
                 </div>
               </div>
 
               {/* Customer Information */}
               <div className="space-y-4 mb-6">
-                <h3 className="font-semibold text-card-foreground">
+                <h3 className="font-semibold text-foreground">
                   Delivery Information
                 </h3>
                 <input
@@ -222,7 +257,7 @@ export default function CartPage() {
                 size="lg"
                 onClick={handleWhatsAppOrder}
               >
-                <MessageCircle className="w-5 h-5" />
+                <FaWhatsapp className="w-5 h-5"/>
                 Order via WhatsApp
               </Button>
 

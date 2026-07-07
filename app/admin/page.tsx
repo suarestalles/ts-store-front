@@ -20,7 +20,6 @@ import {
   Settings,
   Users,
 } from 'lucide-react'
-import { useStore, Order } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -53,7 +52,7 @@ const statusIcons = {
 }
 
 export default function AdminPage() {
-  const { orders, updateOrderStatus, updateTrackingCode } = useStore()
+  const { orders, updateOrderStatus, updateTrackingCode } = {[], () => {}, () => {}}
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [editingOrder, setEditingOrder] = useState<string | null>(null)

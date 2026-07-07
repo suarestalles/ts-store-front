@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils'
 import { ProfilePopup } from '@/features/auth/components/ProfilePopup'
 import { useFavorite } from '@/features/favorite/useFavorite'
 import { useAuth } from '@/features/auth/useAuth'
+import { useCartItem } from '@/features/cartItem/useCartItem'
+import { RiFilePaper2Line } from "react-icons/ri"
 
 interface HeaderProps {
   searchQuery?: string
@@ -17,6 +19,7 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
   const { isAuthenticated, openLogin } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { favoritesCount } = useFavorite()
+  const { cartItemsCount } = useCartItem()
 
 
   return (
@@ -67,16 +70,31 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
               {/* Cart */}
               <Link
                 href="/cart"
+                onClick={async (e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault()
+                    openLogin()
+                  }
+                }}
                 className="relative p-2 rounded-lg hover:bg-primary transition-colors"
                 aria-label="Shopping cart"
               >
                 <ShoppingCart className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
                 {/* {cartItemsCount > 0 && ( */}
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
-                    {0}
+                    { cartItemsCount }
                   </span>
                 {/* )} */}
               </Link>
+
+              {/* Orders */}
+              <button
+                onClick={() => openLogin()}
+                className="p-2 rounded-lg hover:bg-primary transition-colors"
+                aria-label="Order"
+              >
+                <RiFilePaper2Line className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
+              </button>
 
               {/* Profile */}
               <button

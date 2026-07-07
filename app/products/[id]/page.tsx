@@ -12,11 +12,18 @@ import { cn } from '@/lib/utils'
 import { getProductById } from '@/features/product/products.service'
 import Image from "next/image"
 import { Product } from '@/features/product/types'
+import { formatCurrency } from '@/lib/currency'
+import { useFavorite } from '@/features/favorite/useFavorite'
+import { useAuth } from '@/features/auth/useAuth'
+import { useCartItem } from '@/features/cartItem/useCartItem'
 
 export default function ProductPage() {
 
   const { id } = useParams();
   const [product, setProduct] = useState<Product | null>(null);
+  const { toggleFavorite, isFavorite } = useFavorite()
+  const { isAuthenticated, openLogin } = useAuth()
+  const { addCartItem } = useCartItem()
 
   useEffect(() => {
     if (!id) return;
@@ -55,13 +62,17 @@ export default function ProductPage() {
             
             {/* Favorite Button */}
             <button
-            // IMPLEMENT
-              // onClick={() => toggleFavorite(product.id)}
+              onClick={async (e) => {
+                e.preventDefault()
+                if (!isAuthenticated) {
+                  openLogin()
+                  return
+                }
+                await toggleFavorite(product.id)
+              }}
               className={cn(
                 'absolute top-4 right-4 p-3 rounded-full transition-all duration-200 z-10',
-                // IMPLEMENT
-                // favorite
-                true
+                isFavorite(product.id)
                   ? 'bg-accent text-accent-foreground'
                   : 'bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-accent hover:bg-card'
               )}
@@ -97,30 +108,46 @@ export default function ProductPage() {
 
             <div className="flex items-center gap-4 mb-8">
               <span className="text-3xl font-bold text-secondary">
-                ${product.price.toFixed(2)}
+                {formatCurrency(product.price)}
               </span>
             </div>
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
+                onClick={async (e) => {
+                  e.preventDefault()
+                  if (!isAuthenticated) {
+                    openLogin()
+                    return
+                  }
+                  await addCartItem(product.id)
+                }}
                 size="lg"
                 variant="outline"
                 className="flex-1 gap-2"
-                // IMPLEMENT
-                // onClick={() => addToCart(product)}
               >
                 <ShoppingCart className="w-5 h-5" />
                 Add to Cart
               </Button>
-              <Button
-                size="lg"
-                className="flex-1 gap-2"
-                // onClick={handleBuyNow}
+              <Link
+                href="/cart" className="flex flex-1"
+                onClick={async (e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault()
+                    openLogin()
+                  }
+                  await addCartItem(product.id)
+                }}
               >
-                <CreditCard className="w-5 h-5" />
-                Buy Now
-              </Button>
+                <Button
+                  size="lg"
+                  className="flex-1 gap-2"
+                >
+                  <CreditCard className="w-5 h-5" />
+                  Buy Now
+                </Button>
+              </Link>
             </div>
 
             {/* Product Features */}

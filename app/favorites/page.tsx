@@ -7,10 +7,12 @@ import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
 import { Button } from '@/components/ui/button'
 import { useFavorite } from '@/features/favorite/useFavorite'
+import { useAuth } from '@/features/auth/useAuth'
 
 export default function FavoritesPage() {
 
   const { favorites } = useFavorite()
+  const { isAuthenticated, openLogin } = useAuth()
   
   return (
     <div className="min-h-screen bg-card">
@@ -49,12 +51,23 @@ export default function FavoritesPage() {
             <p className="text-muted-foreground mb-8">
               Start adding products to your favorites by clicking the heart icon.
             </p>
-            <Link href="/">
-              <Button className="gap-2">
-                <ShoppingCart className="w-4 h-4" />
-                Browse Products
-              </Button>
-            </Link>
+            <div className="flex justify-center gap-4">
+              <Link href="/favorites">
+                <Button className="gap-2">
+                  <ShoppingCart className="w-4 h-4" />
+                  Browse Products
+                </Button>
+              </Link>
+              {!isAuthenticated ? <Button
+                onClick={async (e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault()
+                    openLogin()
+                  }
+                }}>
+                Login
+              </Button> : null}
+            </div>
           </div>
         )}
       </main>
