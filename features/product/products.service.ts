@@ -24,7 +24,7 @@ export function updateProduct(id: string, data: UpdateProductDTO) {
 }
 
 export function deleteProduct(id: string) {
-    return api<void>(`/products/${id}`, { method: "DELETE" })
+    return api<void>(`/products/${id}`, { method: "DELETE", body: JSON.stringify({}) })
 }
 
 export function getProductByCategory(categoryId: string) {

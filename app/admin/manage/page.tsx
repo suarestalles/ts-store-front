@@ -12,7 +12,6 @@ import {
   Trash2,
   X,
   Check,
-  DollarSign,
   ShoppingBag,
   Mail,
   Phone,
@@ -23,7 +22,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { CreateProductDTO, Product } from '@/features/product/types'
+import { CreateProductDTO, Product, UpdateProductDTO } from '@/features/product/types'
 import { useCustomers } from '@/features/customer/useCustomers'
 import { useProducts } from '@/features/product/useProducts'
 import { Footer } from '@/components/footer'
@@ -31,6 +30,8 @@ import { Header } from '@/components/header'
 import { useAuth } from '@/features/auth/useAuth'
 import { formatCurrency } from '@/lib/currency'
 import { useCategories } from '@/features/category/useCategories'
+import { ProductImage } from '@/features/productImage/types'
+import { formatDate } from '@/lib/date'
 
 type Tab = 'products' | 'customers'
 
@@ -51,7 +52,7 @@ export default function AdminManagePage() {
   const [showNewProductModal, setShowNewProductModal] = useState(false)
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
     name: '',
-    // category: 'Furniture',
+    category: categories[0],
     price: 0,
     description: '',
     images: [],
@@ -66,7 +67,7 @@ export default function AdminManagePage() {
   const [editModalProduct, setEditModalProduct] = useState<Product | null>(null)
 
   // Filter products
-  const filteredProducts = products.filter((product) => {
+  let filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = categoryFilter === 'all' || product.category.name === categoryFilter
@@ -89,7 +90,14 @@ export default function AdminManagePage() {
 
   const handleSaveEdit = (productId: string) => {
     if (editForm.name && editForm.price) {
-      updateProduct(productId, editForm)
+      const editProduct: UpdateProductDTO = {
+        name: editForm.name,
+        description: editForm.description,
+        price: editForm.price,
+        categoryId: editForm.categoryId,
+        images: editForm.images?.map(image => image.url)
+      }
+      updateProduct(productId, editProduct)
       setShowEditModal(false)
       setEditModalProduct(null)
       setEditForm({})
@@ -107,9 +115,13 @@ export default function AdminManagePage() {
   // Image management functions
   const handleAddImageToNew = () => {
     if (newImageUrl.trim()) {
+      const image: ProductImage = {
+        id: '',
+        url: newImageUrl.trim()
+      }
       setNewProduct({
         ...newProduct,
-        images: [...(newProduct.images || [])],
+        images: [...(newProduct.images || []), image],
       })
       setNewImageUrl('')
     }
@@ -124,9 +136,13 @@ export default function AdminManagePage() {
   
   const handleAddImageToEdit = () => {
     if (editImageUrl.trim()) {
+      const image: ProductImage = {
+        id: '',
+        url: editImageUrl.trim()
+      }
       setEditForm({
         ...editForm,
-        images: [...(editForm.images || [])],
+        images: [...(editForm.images || []), image],
       })
       setEditImageUrl('')
     }
@@ -143,12 +159,10 @@ export default function AdminManagePage() {
     if (confirm('Are you sure you want to delete this product?')) {
       deleteProduct(productId)
     }
+    filteredProducts = filteredProducts.filter(product => product.id !== productId)
   }
 
   const handleAddProduct = () => {
-    console.log(`${newProduct.name}`)
-    console.log(`${newProduct.price}`)
-    console.log(`${newProduct.categoryId}`)
     if (newProduct.name && newProduct.price && newProduct.categoryId) {
       const product: CreateProductDTO = {
         name: newProduct.name,
@@ -167,27 +181,6 @@ export default function AdminManagePage() {
       })
     }
   }
-
-  // useEffect(() => {
-    // async function loadProducts() {
-    //   try {
-    //     const response = await getProducts()
-    //     setProducts(response.data)
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }
-    
-    // async function loadCustomers() {
-    //   try {
-    //     const response = await getCustomers()
-    //     setCustomers(response.data)
-    //   } catch (error) {
-    //     console.error(error);
-    //   }
-    // }
-    // loadProducts()
-  // }, [])
 
   if (!isAuthenticated || user?.role.toString() !== 'ADMIN') {
       return (
@@ -407,7 +400,7 @@ export default function AdminManagePage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-foreground">{customer.name}</h3>
-                      <p className="text-sm text-muted-foreground">ID: {customer.id}</p>
+                      <p className="text-sm text-muted-foreground">ID: {customer.id.substring(customer.id.length - 8, customer.id.length).toUpperCase()}</p>
                       <div className="flex flex-wrap gap-4 mt-2">
                         <span className="flex items-center gap-1 text-sm text-muted-foreground">
                           <Mail className="w-4 h-4" />
@@ -433,11 +426,10 @@ export default function AdminManagePage() {
                       <p className="text-xl font-bold text-foreground">{customer.totalOrders}</p>
                     </div>
                     <div className="text-center">
-                      <div className="flex items-center gap-1 text-muted-foreground mb-1">
-                        <DollarSign className="w-4 h-4" />
+                      <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                         <span className="text-xs">Total Spent</span>
                       </div>
-                      <p className="text-xl font-bold text-primary">${customer.totalSpent.toFixed(2)}</p>
+                      <p className="text-xl font-bold text-primary">{formatCurrency(customer.totalSpent)}</p>
                     </div>
                     <div className="text-center">
                       <div className="flex items-center gap-1 text-muted-foreground mb-1">
@@ -445,7 +437,7 @@ export default function AdminManagePage() {
                         <span className="text-xs">Member Since</span>
                       </div>
                       <p className="text-sm font-medium text-foreground">
-                        {new Date(customer.createdAt).toLocaleDateString()}
+                        {formatDate(customer.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -492,10 +484,7 @@ export default function AdminManagePage() {
                 <label className="block text-sm font-medium text-foreground mb-1">Category</label>
                 <select
                   value={newProduct.categoryId}
-                  onChange={(e) => {
-                    console.log(e.target.value)
-                    setNewProduct({ ...newProduct, categoryId: e.target.value })
-                  }}
+                  onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
                   className="w-full px-4 py-2.5 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   {categories.map((cat) => (
@@ -545,7 +534,7 @@ export default function AdminManagePage() {
                       className="w-full pl-10 pr-4 py-2 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
-                  <Button type="button" onClick={handleAddImageToNew} variant="outline" size="icon" className="hover:bg-primary transition-colors">
+                  <Button type="button" onClick={() => handleAddImageToNew()} variant="outline" size="icon" className="hover:bg-primary transition-colors">
                     <Plus className="w-4 h-4 text-primary-foreground" />
                   </Button>
                 </div>
@@ -585,7 +574,7 @@ export default function AdminManagePage() {
                 <Button
                   onClick={() => handleAddProduct()}
                   className="flex-1 bg-primary"
-                  disabled={!newProduct.name || !newProduct.price}
+                  disabled={!newProduct.name || !newProduct.price || newProduct.description!.length < 5}
                 >
                   Add Product
                 </Button>
@@ -684,7 +673,7 @@ export default function AdminManagePage() {
                       className="w-full pl-8 pr-4 py-2.5 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
-                  <Button type="button" onClick={handleAddImageToEdit} variant="outline" className="hover:bg-primary transition-colors">
+                  <Button type="button" onClick={() => handleAddImageToEdit()} variant="outline" className="hover:bg-primary transition-colors">
                     <Plus className="w-4 h-4 mr-2" />
                     Add
                   </Button>

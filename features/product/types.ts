@@ -28,4 +28,5 @@ export interface UpdateProductDTO {
     description?: string
     price?: number
     categoryId?: string
+    images?: string[]
 }

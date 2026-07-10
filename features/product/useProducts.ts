@@ -23,6 +23,7 @@ export function useProducts() {
     }
 
     async function updateProduct(id: string, dto: UpdateProductDTO) {
+        console.log(dto)
         const updated = await updateProductService(id, dto).then(data => data.data);
 
         setProducts(current =>
