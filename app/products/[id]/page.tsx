@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { ArrowLeft, Heart, ShoppingCart, CreditCard } from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Product3DViewer } from '@/components/product-3d-viewer'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { getProductById } from '@/features/product/products.service'
@@ -57,8 +56,8 @@ export default function ProductPage() {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
           {/* 3D Viewer */}
           <div className="relative aspect-square bg-primary/60 rounded-2xl overflow-hidden border border-border">
-            <Product3DViewer category={product.category.name} className="h-full" />
-            <Image src={`${product.images[0] ?? "https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg"}`} alt="Product Image" fill={true} loading='eager'></Image>
+            {/* <Product3DViewer category={product.category.name} className="h-full" /> */}
+            <Image src={`${product.images[0].url}`} alt="Product Image" fill={true} loading='eager'></Image>
             
             {/* Favorite Button */}
             <button
@@ -151,7 +150,7 @@ export default function ProductPage() {
             </div>
 
             {/* Product Features */}
-            <div className="mt-8 pt-8 border-t border-border">
+            {/* <div className="mt-8 pt-8 border-t border-border">
               <h3 className="text-lg font-semibold text-foreground mb-4">Features</h3>
               <ul className="space-y-3 text-muted-foreground">
                 <li className="flex items-center gap-3">
@@ -171,7 +170,7 @@ export default function ProductPage() {
                   Free shipping on orders over $200
                 </li>
               </ul>
-            </div>
+            </div> */}
           </div>
         </div>
       </main>

@@ -19,7 +19,6 @@ export async function api<T>(
         const error = await res.json().catch(() => ({}))
         throw new Error(error.message || "Request failed")
     }
-    console.log(res)
 
     return {data: await res.json(), ok: res.ok}
 }

@@ -21,17 +21,28 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
 } from 'lucide-react'
-import { useStore, Product, Customer } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { CreateProductDTO, Product } from '@/features/product/types'
+import { useCustomers } from '@/features/customer/useCustomers'
+import { useProducts } from '@/features/product/useProducts'
+import { Footer } from '@/components/footer'
+import { Header } from '@/components/header'
+import { useAuth } from '@/features/auth/useAuth'
+import { formatCurrency } from '@/lib/currency'
+import { useCategories } from '@/features/category/useCategories'
 
 type Tab = 'products' | 'customers'
 
 export default function AdminManagePage() {
-  const { products, updateProduct, addProduct, deleteProduct, customers } = useStore()
   const [activeTab, setActiveTab] = useState<Tab>('products')
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
+
+  const { customers } = useCustomers()
+  const { products, createProduct, deleteProduct, updateProduct } = useProducts()
+  const { categories } = useCategories()
+  const { isAuthenticated, openLogin, user } = useAuth()
   
   // Product editing state
   const [editForm, setEditForm] = useState<Partial<Product>>({})
@@ -40,7 +51,7 @@ export default function AdminManagePage() {
   const [showNewProductModal, setShowNewProductModal] = useState(false)
   const [newProduct, setNewProduct] = useState<Partial<Product>>({
     name: '',
-    category: 'Furniture',
+    // category: 'Furniture',
     price: 0,
     description: '',
     images: [],
@@ -58,7 +69,7 @@ export default function AdminManagePage() {
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter
+    const matchesCategory = categoryFilter === 'all' || product.category.name === categoryFilter
     return matchesSearch && matchesCategory
   })
 
@@ -68,8 +79,6 @@ export default function AdminManagePage() {
     customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     customer.phone.includes(searchQuery)
   )
-
-  const categories = ['Furniture', 'Lighting', 'Decor']
 
   const handleEditProduct = (product: Product) => {
     setEditModalProduct(product)
@@ -100,7 +109,7 @@ export default function AdminManagePage() {
     if (newImageUrl.trim()) {
       setNewProduct({
         ...newProduct,
-        images: [...(newProduct.images || []), newImageUrl.trim()],
+        images: [...(newProduct.images || [])],
       })
       setNewImageUrl('')
     }
@@ -117,7 +126,7 @@ export default function AdminManagePage() {
     if (editImageUrl.trim()) {
       setEditForm({
         ...editForm,
-        images: [...(editForm.images || []), editImageUrl.trim()],
+        images: [...(editForm.images || [])],
       })
       setEditImageUrl('')
     }
@@ -137,26 +146,80 @@ export default function AdminManagePage() {
   }
 
   const handleAddProduct = () => {
-    if (newProduct.name && newProduct.price && newProduct.category) {
-      const product: Product = {
-        id: `PROD-${Date.now()}`,
+    console.log(`${newProduct.name}`)
+    console.log(`${newProduct.price}`)
+    console.log(`${newProduct.categoryId}`)
+    if (newProduct.name && newProduct.price && newProduct.categoryId) {
+      const product: CreateProductDTO = {
         name: newProduct.name,
-        category: newProduct.category,
+        categoryId: newProduct.categoryId,
         price: newProduct.price,
         description: newProduct.description || '',
-        images: newProduct.images || [],
+        images: newProduct.images?.map(image => image.url)
       }
-      addProduct(product)
+      createProduct(product)
       setShowNewProductModal(false)
       setNewProduct({
         name: '',
-        category: 'Furniture',
         price: 0,
         description: '',
         images: [],
       })
     }
   }
+
+  // useEffect(() => {
+    // async function loadProducts() {
+    //   try {
+    //     const response = await getProducts()
+    //     setProducts(response.data)
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // }
+    
+    // async function loadCustomers() {
+    //   try {
+    //     const response = await getCustomers()
+    //     setCustomers(response.data)
+    //   } catch (error) {
+    //     console.error(error);
+    //   }
+    // }
+    // loadProducts()
+  // }, [])
+
+  if (!isAuthenticated || user?.role.toString() !== 'ADMIN') {
+      return (
+        <div className="min-h-screen bg-card">
+          <Header />
+          <main className="container mx-auto px-4 py-16">
+            <div className="text-center">
+              <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-foreground mb-2">Hello Manager!</h1>
+              <p className="text-muted-foreground mb-8">
+                 You need to be logged in to continue...
+              </p>
+                <div className="flex justify-center gap-4">
+                  <Link href="/">
+                    <Button>Return to products</Button>
+                  </Link>
+                  {!isAuthenticated ? <Button
+                    onClick={async (e) => {
+                      if (!isAuthenticated) {
+                        e.preventDefault()
+                        openLogin()
+                      }
+                    }}>
+                    Login
+                  </Button> : null}
+                </div>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      )
+    }
 
   return (
     <div className="min-h-screen bg-white">
@@ -229,7 +292,7 @@ export default function AdminManagePage() {
               >
                 <option value="all">All Categories</option>
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat.name} value={cat.name}>{cat.name}</option>
                 ))}
               </select>
               <Button onClick={() => setShowNewProductModal(true)} className="flex items-center gap-2 bg-secondary px-4 py-5 hover:bg-secondary transition-colors border border-border rounded-lg">
@@ -250,7 +313,6 @@ export default function AdminManagePage() {
                     <th className="text-left px-6 py-4 text-sm text-primary-foreground">Product</th>
                     <th className="text-left px-6 py-4 text-sm text-primary-foreground">Category</th>
                     <th className="text-left px-6 py-4 text-sm text-primary-foreground">Price</th>
-                    <th className="text-left px-6 py-4 text-sm text-primary-foreground">Images</th>
                     <th className="text-left px-6 py-4 text-sm text-primary-foreground">Actions</th>
                   </tr>
                 </thead>
@@ -261,7 +323,7 @@ export default function AdminManagePage() {
                         <div className="flex items-center gap-3">
                           {product.images && product.images.length > 0 ? (
                             <img
-                              src={product.images[0]}
+                              src={product.images[0].url}
                               alt={product.name}
                               className="w-12 h-12 rounded-lg object-cover"
                             />
@@ -279,28 +341,30 @@ export default function AdminManagePage() {
                       <td className="px-6 py-4">
                         <span className={cn(
                           'px-3 py-1 rounded-full text-xs font-medium',
-                          product.category === 'Furniture' && 'bg-blue-500/20 text-blue-500',
-                          product.category === 'Lighting' && 'bg-yellow-500/20 text-yellow-500',
-                          product.category === 'Decor' && 'bg-green-500/20 text-green-500'
+                          product.category.name === 'Furniture' && 'bg-blue-500/20 text-blue-500',
+                          product.category.name === 'Lighting' && 'bg-yellow-500/20 text-yellow-500',
+                          product.category.name === 'Decor' && 'bg-green-500/20 text-green-500'
                         )}>
-                          {product.category}
+                          {product.category.name}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="font-semibold text-foreground">${product.price.toFixed(2)}</span>
+                        <span className="font-semibold text-foreground">{formatCurrency(product.price)}</span>
                       </td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <ImageIcon className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm text-muted-foreground">
                             {product.images?.length || 0} image{(product.images?.length || 0) !== 1 ? 's' : ''}
                           </span>
                         </div>
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
                           <button
-                            onClick={() => handleEditProduct(product)}
+                            onClick={() => {
+                              handleEditProduct(product)
+                            }}
                             className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
                             title="Edit product"
                           >
@@ -427,12 +491,15 @@ export default function AdminManagePage() {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Category</label>
                 <select
-                  value={newProduct.category}
-                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                  value={newProduct.categoryId}
+                  onChange={(e) => {
+                    console.log(e.target.value)
+                    setNewProduct({ ...newProduct, categoryId: e.target.value })
+                  }}
                   className="w-full px-4 py-2.5 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                    <option key={cat.name} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -440,14 +507,14 @@ export default function AdminManagePage() {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Price</label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  {/* <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /> */}
                   <input
                     type="number"
                     step="0.01"
                     value={newProduct.price}
                     onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) || 0 })}
                     placeholder="0.00"
-                    className="w-full pl-10 pr-4 py-2 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full px-4 py-2 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -487,7 +554,7 @@ export default function AdminManagePage() {
                     {newProduct.images.map((img, index) => (
                       <div key={index} className="relative group">
                         <img
-                          src={img}
+                          src={img.url}
                           alt={`Product image ${index + 1}`}
                           className="w-full h-20 object-cover rounded-lg border border-border"
                         />
@@ -516,7 +583,7 @@ export default function AdminManagePage() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleAddProduct}
+                  onClick={() => handleAddProduct()}
                   className="flex-1 bg-primary"
                   disabled={!newProduct.name || !newProduct.price}
                 >
@@ -558,12 +625,12 @@ export default function AdminManagePage() {
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-1">Category</label>
                   <select
-                    value={editForm.category || ''}
-                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                    value={editForm.category?.id || ''}
+                    onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
                     className="w-full px-4 py-2.5 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
                     {categories.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
+                      <option key={cat.name} value={cat.id}>{cat.name}</option>
                     ))}
                   </select>
                 </div>
@@ -572,7 +639,7 @@ export default function AdminManagePage() {
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1">Price</label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  {/* <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /> */}
                   <input
                     type="number"
                     step="0.01"
@@ -614,7 +681,7 @@ export default function AdminManagePage() {
                       onChange={(e) => setEditImageUrl(e.target.value)}
                       placeholder="Enter image URL"
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImageToEdit())}
-                      className="w-full px-4 py-2.5 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full pl-8 pr-4 py-2.5 bg-background/30 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
                   <Button type="button" onClick={handleAddImageToEdit} variant="outline" className="hover:bg-primary transition-colors">
@@ -629,7 +696,7 @@ export default function AdminManagePage() {
                     {editForm.images.map((img, index) => (
                       <div key={index} className="relative group aspect-square">
                         <img
-                          src={img}
+                          src={img.url}
                           alt={`Product image ${index + 1}`}
                           className="w-full h-full object-cover rounded-lg border border-border"
                         />

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag, MessageCircle, Phone } from 'lucide-react'
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag} from 'lucide-react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,7 @@ import { FaWhatsapp } from "react-icons/fa"
 import { formatCurrency } from '@/lib/currency'
 
 export default function CartPage() {
-  const { cartItems, updateQuantity, clearCart, removeCartItem } = useCartItem();
+  const { cartItems, updateQuantity, clearCart, removeCartItem, finishCart } = useCartItem();
   const { user, isAuthenticated, openLogin } = useAuth();
 
   const [customerInfo, setCustomerInfo] = useState({
@@ -44,7 +44,7 @@ export default function CartPage() {
     return encodeURIComponent(message)
   }
 
-  const handleWhatsAppOrder = () => {
+  async function handleWhatsAppOrder() {
     if (!customerInfo.name || !customerInfo.phone || !customerInfo.address) {
       alert('Please fill in all customer information')
       return
@@ -53,6 +53,9 @@ export default function CartPage() {
     const message = generateWhatsAppMessage()
     const whatsappNumber = '5564996144837'
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank')
+    if(cartItems.length === 0) return ''
+    const cart = cartItems.at(0)
+    await finishCart(cart!.cartId)
   }
 
   function calculateTotal() {
@@ -255,7 +258,10 @@ export default function CartPage() {
               <Button
                 className="w-full gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white"
                 size="lg"
-                onClick={handleWhatsAppOrder}
+                onClick={async (e) => {
+                  e.preventDefault()
+                  await handleWhatsAppOrder()
+                }}
               >
                 <FaWhatsapp className="w-5 h-5"/>
                 Order via WhatsApp

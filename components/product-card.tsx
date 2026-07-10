@@ -21,6 +21,9 @@ export function ProductCard({ product }: ProductCardProps) {
   const { isCartItem, addCartItem } = useCartItem()
   const inCart = isCartItem(product.id)
   const { isAuthenticated, openLogin } = useAuth()
+  const imageSrc = product.images.length > 0
+    ? product.images[0].url
+    : "https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg";
 
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden border border-border shadow-sm hover:shadow-lg transition-all duration-300">
@@ -29,8 +32,8 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="relative h-56 bg-primary cursor-pointer">
           {/* <Product3DViewer category={product.category.name} /> */}
           <Image
-            src={"https://radiantbr.com/cdn/shop/files/AbajurGrandeModernoMinimalistaRadiant_9.webp?v=1748635582&width=1024"}
-            alt="Abajur Image"
+            src={imageSrc}
+            alt="Product Image"
             fill={true}
             loading='eager'
           ></Image>

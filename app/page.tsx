@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductCard } from '@/components/product-card'
-import { Filter } from 'lucide-react'
+import { Filter, Search } from 'lucide-react'
 import { getProductByCategory, getProducts } from '@/features/product/products.service'
 import { Product } from '@/features/product/types'
 import { Category } from '@/features/category/types'
@@ -22,7 +22,7 @@ export default function HomePage() {
         const response = await getCategories()
         setCategories(response.data.data)
       } catch (error) {
-        console.log(error)
+        console.error(error)
       }
     }
     loadCategories();
@@ -44,6 +44,26 @@ export default function HomePage() {
     
   }, [selectedCategory]);
 
+  const normalize = (text: string) =>
+    text
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .toLowerCase();
+
+  const filteredProducts = useMemo(() => {
+    const query = normalize(searchQuery);
+
+    if (!query) return products;
+
+    return products.filter((product) => {
+      return (
+        normalize(product.name).includes(query) ||
+        normalize(product.description).includes(query) ||
+        normalize(product.category.name).includes(query)
+      );
+    });
+  }, [products, searchQuery]);
+
   return (
     <div className="min-h-screen bg-card">
       <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
@@ -61,7 +81,7 @@ export default function HomePage() {
         </section>
 
         {/* Category Filter */} 
-        <section className="mb-8">
+        <section className="mb-8 space-y-4">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Filter className="w-5 h-5" />
@@ -93,13 +113,27 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+
+          {/* Search Bar - Desktop */}
+          <div className="hidden md:flex flex-1 mx-4">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground" />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-primary border border-border rounded-lg text-primary-foreground placeholder:text-sidebar-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
         </section>
 
         {/* Products Grid */}
         <section>
-          {products.length > 0 ? (
+          {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
+              {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

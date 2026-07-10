@@ -8,7 +8,8 @@ import {
   addCartItem as addCartItemService,
   updateQuantity as updateQuantityService,
   clearCart as clearCartService,
-  removeCartItem as removeCartItemService
+  removeCartItem as removeCartItemService,
+  finishCart as finishCartService,
 } from './cartItem.service';
 
 type CartItemContextData = {
@@ -20,6 +21,7 @@ type CartItemContextData = {
   updateQuantity: (cartItemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   removeCartItem: (itemId: string) => Promise<void>
+  finishCart: (cartId: string) => Promise<void>
   reloadCartItems: () => Promise<void>
 };
 
@@ -96,6 +98,11 @@ export function CartItemProvider({ children }: CartItemProviderProps) {
     await reloadCartItems()
   }
 
+  async function finishCart(cartId: string) {
+    await finishCartService(cartId)
+    await reloadCartItems()
+  }
+
   return (
     <CartItemContext.Provider
       value={{
@@ -107,6 +114,7 @@ export function CartItemProvider({ children }: CartItemProviderProps) {
         updateQuantity,
         clearCart,
         removeCartItem,
+        finishCart,
         reloadCartItems: async () => {},
       }}
     >

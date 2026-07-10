@@ -9,6 +9,7 @@ import { useFavorite } from '@/features/favorite/useFavorite'
 import { useAuth } from '@/features/auth/useAuth'
 import { useCartItem } from '@/features/cartItem/useCartItem'
 import { RiFilePaper2Line } from "react-icons/ri"
+import { Role } from '@/features/user/types'
 
 interface HeaderProps {
   searchQuery?: string
@@ -16,7 +17,7 @@ interface HeaderProps {
 }
 
 export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
-  const { isAuthenticated, openLogin } = useAuth()
+  const { isAuthenticated, user, openLogin } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { favoritesCount } = useFavorite()
   const { cartItemsCount } = useCartItem()
@@ -32,20 +33,6 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
               <Package className="w-8 h-8 text-primary" />
               <span className="text-xl font-bold text-foreground hidden sm:inline">3D Store</span>
             </Link>
-
-            {/* Search Bar - Desktop */}
-            <div className="hidden md:flex flex-1 max-w-xl mx-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange?.(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-primary border border-border rounded-lg text-primary-foreground placeholder:text-sidebar-border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                />
-              </div>
-            </div>
 
             {/* Navigation Icons */}
             <div className="flex items-center gap-2">
@@ -88,13 +75,19 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
               </Link>
 
               {/* Orders */}
-              <button
-                onClick={() => openLogin()}
-                className="p-2 rounded-lg hover:bg-primary transition-colors"
-                aria-label="Order"
+              <Link
+                href="/orders"
+                onClick={async (e) => {
+                  if (!isAuthenticated) {
+                    e.preventDefault()
+                    openLogin()
+                  }
+                }}
+                className="relative p-2 rounded-lg hover:bg-primary transition-colors"
+                aria-label="Orders"
               >
                 <RiFilePaper2Line className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
-              </button>
+              </Link>
 
               {/* Profile */}
               <button
@@ -106,13 +99,16 @@ export function Header({ searchQuery = '', onSearchChange }: HeaderProps) {
               </button>
 
               {/* Admin Link */}
-              <Link
-                href="/admin"
-                className="hidden sm:flex p-2 rounded-lg hover:bg-primary transition-colors"
-                aria-label="Admin Dashboard"
-              >
-                <Settings className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
-              </Link>
+              {user?.role.toString() === "ADMIN"
+                ? <Link
+                    href="/admin"
+                    className="hidden sm:flex p-2 rounded-lg hover:bg-primary transition-colors"
+                    aria-label="Admin Dashboard"
+                  >
+                    <Settings className="w-5 h-5 text-foreground hover:text-primary-foreground transition-colors" />
+                  </Link>
+                : null
+              }
 
               {/* Mobile Menu Toggle */}
               <button

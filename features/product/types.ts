@@ -9,6 +9,7 @@ export interface Product {
     description: string
     createdAt: string
     updatedAt: string
+    categoryId: string
     category: Category
     images: ProductImage[]
     favorites: Favorite[]
@@ -19,6 +20,7 @@ export interface CreateProductDTO {
     description: string
     price: number
     categoryId: string
+    images?: string[]
 }
 
 export interface UpdateProductDTO {

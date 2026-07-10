@@ -1,7 +1,7 @@
 import { CreateProductDTO, Product, UpdateProductDTO } from "@/features/product/types";
 import { api } from "@/lib/api";
 
-export function getProducts() {
+export function getProducts(): Promise<{data: {data: Product[]}}> {
     return api<Product[]>("/products");
 }
 

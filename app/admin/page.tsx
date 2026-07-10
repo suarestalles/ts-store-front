@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
   BarChart3,
@@ -13,12 +13,10 @@ import {
   Search,
   Filter,
   Edit2,
-  Truck,
   Check,
-  Clock,
   X,
   Settings,
-  Users,
+  ShoppingBag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -36,81 +34,174 @@ import {
   Pie,
   Cell,
 } from 'recharts'
+import { useOrder } from '@/features/order/useOrder'
+import { Order, OrderStatus } from '@/features/order/types'
+import { useAuth } from '@/features/auth/useAuth'
+import { Header } from '@/components/header'
+import { Footer } from '@/components/footer'
+import { formatCurrency } from '@/lib/currency'
+import { eachDayOfInterval, eachMonthOfInterval, format, subDays, subMonths } from 'date-fns'
+ 
+function statusColors(status: OrderStatus): string {
+  switch (status.toString()) {
+    case 'PENDING':
+      return "bg-secondary/20 text-secondary/60 border-secondary/30";
+      
+    case 'CONFIRMED':
+      return "bg-blue/20 text-blue/60 border-blue/30";
+      
+    case 'PROCESSING':
+      return "bg-chart-2/20 text-chart-2 border-chart-2/30";
 
-const statusColors = {
-  pending: 'bg-secondary/20 text-secondary/60 border-secondary/30',
-  processing: 'bg-chart-2/20 text-chart-2 border-chart-2/30',
-  shipped: 'bg-chart-3/20 text-chart-3 border-chart-3/30',
-  delivered: 'bg-chart-4/20 text-chart-4 border-chart-4/30',
-}
+    case 'SHIPPED':
+      return "bg-chart-3/20 text-chart-3 border-chart-3/30";
 
-const statusIcons = {
-  pending: Clock,
-  processing: Package,
-  shipped: Truck,
-  delivered: Check,
+    case 'DELIVERED':
+      return "bg-chart-4/20 text-chart-4 border-chart-4/30";
+
+    case 'CANCELED':
+      return "bg-red/20 text-red border-red/30";
+
+    default:
+      return "";
+  }
 }
 
 export default function AdminPage() {
-  const { orders, updateOrderStatus, updateTrackingCode } = {[], () => {}, () => {}}
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [editingOrder, setEditingOrder] = useState<string | null>(null)
   const [trackingInput, setTrackingInput] = useState('')
+  const [localOrders, setLocalOrders] = useState<Order[]>([])
+  const { orders, changeTrackingCode, updateOrderStatus } = useOrder()
+  const { user, isAuthenticated, openLogin } = useAuth();
+  
+  useEffect(() => {
+    setLocalOrders(orders)
+  }, [orders])
 
   // Calculate statistics
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
-  const totalOrders = orders.length
+  // const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
+  const totalRevenue = localOrders.reduce((total, order) => {return total + (order.total)}, 0)
+  const totalOrders = localOrders.length
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
   // Weekly sales data
-  const weeklySales = [
-    { day: 'Mon', sales: 1200 },
-    { day: 'Tue', sales: 1800 },
-    { day: 'Wed', sales: 1400 },
-    { day: 'Thu', sales: 2200 },
-    { day: 'Fri', sales: 1900 },
-    { day: 'Sat', sales: 2800 },
-    { day: 'Sun', sales: 2100 },
-  ]
+  const weeklySales = localOrders.filter(order => new Date(order.createdAt) >= subDays(new Date(), 7))
 
   // Monthly sales data
-  const monthlySales = [
-    { month: 'Jan', revenue: 12000 },
-    { month: 'Feb', revenue: 15000 },
-    { month: 'Mar', revenue: 18000 },
-    { month: 'Apr', revenue: 14000 },
-    { month: 'May', revenue: 22000 },
-  ]
+  const monthlySales = localOrders.filter(order => new Date(order.createdAt) >= subMonths(new Date(), 1))
 
   // Order status distribution
   const statusDistribution = [
-    { name: 'Pending', value: orders.filter((o) => o.status === 'pending').length, color: 'var(--secondary)' },
-    { name: 'Processing', value: orders.filter((o) => o.status === 'processing').length, color: 'var(--chart-2)' },
-    { name: 'Shipped', value: orders.filter((o) => o.status === 'shipped').length, color: 'var(--chart-3)' },
-    { name: 'Delivered', value: orders.filter((o) => o.status === 'delivered').length, color: 'var(--chart-4)' },
+    { name: 'Pending', value: localOrders.filter(order => order.status.toString() === 'PENDING').length, color: 'var(--secondary)' },
+    { name: 'Confirmed', value: localOrders.filter(order => order.status.toString() === 'CONFIRMED').length, color: 'yellow' },
+    { name: 'Processing', value: localOrders.filter(order => order.status.toString() === 'PROCESSING').length, color: 'var(--chart-2)' },
+    { name: 'Shipped', value: localOrders.filter(order => order.status.toString() === 'SHIPPED').length, color: 'var(--chart-3)' },
+    { name: 'Delivered', value: localOrders.filter(order => order.status.toString() === 'DELIVERED').length, color: 'var(--chart-4)' },
+    { name: 'Canceled', value: localOrders.filter(order => order.status.toString() === 'CANCELED').length, color: 'red' },
   ]
 
   // Filter orders
-  const filteredOrders = orders.filter((order) => {
+  const filteredOrders = localOrders.filter((order) => {
     const matchesSearch =
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || order.status === statusFilter
+      order.customerName?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesStatus = statusFilter === 'all' || order.status?.toString().toLowerCase() === statusFilter
     return matchesSearch && matchesStatus
   })
 
-  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
-    updateOrderStatus(orderId, newStatus)
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    const updatedOrder = await updateOrderStatus({id: orderId, status: newStatus})
+    setLocalOrders(current => current.map(order => order.id === orderId
+      ? updatedOrder
+      : order
+    ))
   }
 
-  const handleTrackingUpdate = (orderId: string) => {
+  const handleTrackingUpdate = async (orderId: string) => {
     if (trackingInput.trim()) {
-      updateTrackingCode(orderId, trackingInput.trim())
+      const updatedOrder = await changeTrackingCode({id: orderId, trackingCode: trackingInput.trim()})
+      setLocalOrders(current => current.map(order => order.id === orderId
+        ? updatedOrder
+        : order
+      ))
       setEditingOrder(null)
       setTrackingInput('')
     }
   }
+
+  const weeklyStart = subDays(new Date(), 6);
+  const weeklyEnd = new Date(); 
+
+  const weeklyChartData = eachDayOfInterval({ start: weeklyStart, end: weeklyEnd }).map(day => {
+    const total = weeklySales
+      .filter(order =>
+        format(order.createdAt, "yyyy-MM-dd") ===
+        format(day, "yyyy-MM-dd")
+      )
+      .reduce((sum, order) => sum + order.total, 0);
+
+    const totalFormatted = formatCurrency(total)
+
+    return {
+      day: format(day, "EEEE"),
+      total,
+      totalFormatted,
+    };
+  });
+
+  const monthlyStart = subMonths(new Date(), 6);
+  const monthlyEnd = new Date(); 
+
+  const monthlyChartData = eachMonthOfInterval({ start: monthlyStart, end: monthlyEnd }).map(month => {
+    const total = monthlySales
+      .filter(order =>
+        format(order.createdAt, "yyyy-MM") ===
+        format(month, "yyyy-MM")
+      )
+      .reduce((sum, order) => sum + order.total, 0);
+
+    const totalFormatted = formatCurrency(total)
+
+    return {
+      month: format(month, "MMMM"),
+      total,
+      totalFormatted,
+    };
+  });
+
+  if (!isAuthenticated || user?.role.toString() !== 'ADMIN') {
+      return (
+        <div className="min-h-screen bg-card">
+          <Header />
+          <main className="container mx-auto px-4 py-16">
+            <div className="text-center">
+              <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-foreground mb-2">Hello Manager!</h1>
+              <p className="text-muted-foreground mb-8">
+                 You need to be logged in to continue...
+              </p>
+                <div className="flex justify-center gap-4">
+                  <Link href="/">
+                    <Button>Return to products</Button>
+                  </Link>
+                  {!isAuthenticated ? <Button
+                    onClick={async (e) => {
+                      if (!isAuthenticated) {
+                        e.preventDefault()
+                        openLogin()
+                      }
+                    }}>
+                    Login
+                  </Button> : null}
+                </div>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      )
+    }
 
   return (
     <div className="min-h-screen bg-white">
@@ -151,7 +242,7 @@ export default function AdminPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
                 <p className="text-2xl font-bold text-primary-foreground">
-                  ${totalRevenue.toFixed(2)}
+                  {formatCurrency(totalRevenue)}
                 </p>
               </div>
             </div>
@@ -191,7 +282,7 @@ export default function AdminPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Pending Orders</p>
                 <p className="text-2xl font-bold text-primary-foreground">
-                  {orders.filter((o) => o.status === 'pending').length}
+                  {localOrders.filter((o) => o.status.toString() === 'PENDING').length}
                 </p>
               </div>
             </div>
@@ -214,11 +305,13 @@ export default function AdminPage() {
             </div>
             <div className="h-84">
               <ResponsiveContainer width="100%" height="100%"  style={{paddingBottom: 100}}>
-                <BarChart data={weeklySales}>
+                <BarChart data={weeklyChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="day" stroke="var(--foreground)" />
                   <YAxis stroke="var(--foreground)" />
                   <Tooltip
+                    formatter={(value) => [formatCurrency(Number(value)), "Total"]}
+                    labelFormatter={(label) => `Day: ${label}`}
                     contentStyle={{
                       backgroundColor: 'var(--primary)',
                       border: '1px solid var(--border)',
@@ -228,7 +321,7 @@ export default function AdminPage() {
                     itemStyle={{color: 'var(--primary-foreground)', fontWeight: 'bold'}}
                     labelStyle={{color: 'var(--primary-foreground)'}}
                   />
-                  <Bar dataKey="sales" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="total" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -290,11 +383,13 @@ export default function AdminPage() {
           </h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlySales}>
+              <LineChart data={monthlyChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" stroke="var(--foreground)" />
                 <YAxis stroke="var(--foreground)" />
                 <Tooltip
+                  formatter={(value) => [formatCurrency(Number(value)), "Total"]}
+                  labelFormatter={(label) => `Month: ${label}`}
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
@@ -304,7 +399,7 @@ export default function AdminPage() {
                 />
                 <Line
                   type="linear"
-                  dataKey="revenue"
+                  dataKey="total"
                   stroke="var(--secondary)"
                   strokeWidth={4}
                   dot={{ fill: 'var(--secondary)', r: 5}}
@@ -383,12 +478,12 @@ export default function AdminPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredOrders.map((order) => {
-                  const StatusIcon = statusIcons[order.status]
+                  // const StatusIcon = order.status
                   return (
                     <tr key={order.id} className="hover:bg-secondary/30 transition-colors">
                       <td className="px-6 py-4">
                         <span className="font-mono text-sm text-primary-foreground">
-                          {order.id}
+                          {order.id.substring(order.id.length - 8, order.id.length).toUpperCase()}
                         </span>
                       </td>
                       <td className="px-6 py-4">
@@ -404,24 +499,24 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className="font-semibold text-primary-foreground">
-                          ${order.total.toFixed(2)}
+                          {formatCurrency(order.total)}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <select
                           value={order.status}
-                          onChange={(e) =>
-                            handleStatusChange(order.id, e.target.value as Order['status'])
-                          }
+                          onChange={async (e) => await handleStatusChange(order.id, e.target.value)}
                           className={cn(
                             'px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer focus:outline-none',
-                            statusColors[order.status]
+                            statusColors(order.status)
                           )}
                         >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
+                          <option value="PENDING">Pending</option>
+                          <option value="CONFIRMED">Confirmed</option>
+                          <option value="PROCESSING">Processing</option>
+                          <option value="SHIPPED">Shipped</option>
+                          <option value="DELIVERED">Delivered</option>
+                          <option value="CANCELED">Canceled</option>
                         </select>
                       </td>
                       <td className="px-6 py-4">
@@ -473,7 +568,7 @@ export default function AdminPage() {
                           size="sm"
                           onClick={() => {
                             alert(
-                              `Order Details:\n\nCustomer: ${order.customerName}\nPhone: ${order.customerPhone}\nAddress: ${order.customerAddress}\n\nItems:\n${order.items.map((i) => `- ${i.product.name} x ${i.quantity}`).join('\n')}`
+                              `Order Details:\n\nCustomer: ${order.customerName}\nPhone: ${order.customerPhone}\nAddress: ${order.customerAddress}\n\nItems:\n${order.items.map((i) => `- ${i.product.name} x ${i.quantity} => ${formatCurrency(i.subtotal)}`).join('\n')}`
                             )
                           }}
                         >

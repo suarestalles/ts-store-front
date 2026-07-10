@@ -31,3 +31,7 @@ export async function removeCartItem(itemId: string): Promise<{data: Cart | null
         body: JSON.stringify(data)
     })
 }
+
+export async function finishCart(cartId: string): Promise<{data: Cart | null}> {
+    return api<Cart | null>(`/carts/finish/${cartId}`)
+}

@@ -42,9 +42,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 return
             }
 
-            setUser(response.data)
+            setUser(response.data.user)
         } catch (error) {
-            console.log(error)
+            console.error(error)
             setUser(null)
         } finally {
             setLoading(false)

@@ -5,6 +5,7 @@ import './globals.css'
 import { FavoriteProvider } from '@/features/favorite/FavoriteContext';
 import { AuthProvider } from '@/features/auth/AuthContext';
 import { CartItemProvider } from '@/features/cartItem/CartItemContext';
+import { OrderProvider } from '@/features/order/OrderContext';
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -43,7 +44,9 @@ export default function RootLayout({
         <AuthProvider>
           <CartItemProvider>
             <FavoriteProvider>
-              {children}
+              <OrderProvider>
+                {children}
+              </OrderProvider>
             </FavoriteProvider>
           </CartItemProvider>
         </AuthProvider>
