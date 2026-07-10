@@ -82,7 +82,7 @@ export default function AdminPage() {
 
   // Calculate statistics
   // const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0)
-  const totalRevenue = localOrders.reduce((total, order) => {return total + (order.total)}, 0)
+  const totalRevenue = localOrders.reduce((total, order) => {return total + Number(order.total)}, 0)
   const totalOrders = localOrders.length
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
@@ -140,7 +140,7 @@ export default function AdminPage() {
         format(order.createdAt, "yyyy-MM-dd") ===
         format(day, "yyyy-MM-dd")
       )
-      .reduce((sum, order) => sum + order.total, 0);
+      .reduce((sum, order) => sum + Number(order.total), 0);
 
     const totalFormatted = formatCurrency(total)
 
@@ -160,9 +160,10 @@ export default function AdminPage() {
         format(order.createdAt, "yyyy-MM") ===
         format(month, "yyyy-MM")
       )
-      .reduce((sum, order) => sum + order.total, 0);
+      .reduce((sum, order) => sum + Number(order.total), 0);
 
     const totalFormatted = formatCurrency(total)
+    console.log(totalFormatted)
 
     return {
       month: format(month, "MMMM"),
@@ -268,7 +269,7 @@ export default function AdminPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Avg. Order Value</p>
                 <p className="text-2xl font-bold text-primary-foreground">
-                  ${avgOrderValue.toFixed(2)}
+                  {formatCurrency(avgOrderValue)}
                 </p>
               </div>
             </div>
